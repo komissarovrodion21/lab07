@@ -1,10 +1,10 @@
 [![Build Status](https://travis-ci.org/komissarovrodion21/lab07.svg?branch=master)](https://travis-ci.org/komissarovrodion21/lab07)
-## Laboratory work VI
+## Laboratory work VII
 
-Данная лабораторная работа посвещена изучению фреймворков для тестирования на примере **Catch**
+Данная лабораторная работа посвещена изучению систем документирования исходного кода на примере **Doxygen**
 
 ```ShellSession
-$ open https://github.com/philsquared/Catch
+$ open https://www.stack.nl/~dimitri/doxygen/manual/index.html
 ```
 
 ## Tasks
@@ -15,104 +15,73 @@ $ open https://github.com/philsquared/Catch
 - [x] 4. Составить отчет и отправить ссылку личным сообщением в **Slack**
 
 ## Tutorial
-
+Первоначальные настройки
 ```ShellSession
-#устанавливаем значение переменной GITHUB_USERNAME
-$ export GITHUB_USERNAME=<имя_пользователя>
+$ export GITHUB_USERNAME=komissarovrodion21 #устанавливаем значение переменнойGITHUB_USERNAME
+$ alias edit=nano #Создаем алиас на редактирование файлов одним из редакторов(nano)
+```
+Проводим первоначальные настройки для соединения с репозиторием
+```ShellSession
+$ git clone https://github.com/${GITHUB_USERNAME}/lab06 projects/lab07 #клонирование удаленного репозитория шестой й лабораторной в локальный каталог седьмой лабораторной
+$ cd projects/lab07 #меняем директорию на lab07
+$ git remote remove origin #отключаемся от удаленного репозитория шестой лабораторной
+$ git remote add origin https://github.com/${GITHUB_USERNAME}/lab07 #подключаемся к удаленному репозиторию седьмой лабораторной
+```
+Начало работы с Doxygen
+```ShellSession
+$ mkdir docs #создаем каталог docs
+$ doxygen -g docs/doxygen.conf #создаем файл doxygen.conf
+$ cat docs/doxygen.conf | less #редактирование файла doxygen.conf
+```
+Работа с файлом doxygen.conf
+```ShellSession
+#Редактирование файла doxygen.conf при помощи команды sed и добавление информации в документацию doxygen.conf
+$ sed -i 's/\(PROJECT_NAME.*=\).*$/\1 print/g' docs/doxygen.conf
+$ sed -i 's/\(EXAMPLE_PATH.*=\).*$/\1 examples/g' docs/doxygen.conf
+$ sed -i 's/\(INCLUDE_PATH.*=\).*$/\1 examples/g' docs/doxygen.conf
+$ sed -i 's/\(EXTRACT_ALL.*=\).*$/\1 YES/g' docs/doxygen.conf
+$ sed -i 's/\(INPUT *=\).*$/\1 README.md include/g' docs/doxygen.conf
+$ sed -i 's/\(USE_MDFILE_AS_MAINPAGE.*=\).*$/\1 README.md/g' docs/doxygen.conf
+$ sed -i 's/\(OUTPUT_DIRECTORY.*=\).*$/\1 docs/g' docs/doxygen.conf
+```
+Редактирование файла README.md
+```ShellSession
+$ gsed -i 's/lab06/lab07/g' README.md #редактирование файла README.md
+```
+Документируем функции print 
+```ShellSession
+# документируем функции print 
+$ edit include/print.hpp
 ```
 
 ```ShellSession
-$ git clone https://github.com/${GITHUB_USERNAME}/lab05 projects/lab07 #клонирование репозитория 5 лабораторной в локальный каталог 6 лабораторной
-$ cd projects/lab07 #выбираем директорию lab07
-$ git remote remove origin #отключаемся от удаленного репозитория 5 лабораторной
-$ git remote add origin https://github.com/${GITHUB_USERNAME}/lab07 #подключаемся к удаленному репозиторию 6 лабораторной
+$ git add .#добавляем все отредактированные файлы в подтвержденные
+$ git commit -m"added doxygen.conf" #создаем коммит
+$ git push origin master #выгружаем локальный репозиторий в удаленный репозиторий
 ```
-
-```ShellSession
-$ mkdir tests #создаем каталог tests
-$ wget https://github.com/philsquared/Catch/releases/download/v1.9.3/catch.hpp -O tests/catch.hpp #устанавливаем библиотеку для модульного тестирования на языке С++ catch.hpp
-$ cat > tests/main.cpp <<EOF #вносим изменения в main.cpp, подключая к нему catch.hpp
-#define CATCH_CONFIG_MAIN
-#include "catch.hpp"
-EOF
-```
-
-```ShellSession
-$ §sed -i '/option(BUILD_EXAMPLES "Build examples" OFF)/a\ #добавляем опцию option(BUILD_TESTS "Build tests" OFF) в файл CMakeLists.txt
-option(BUILD_TESTS "Build tests" OFF)
-' CMakeLists.txt
-$ cat >> CMakeLists.txt <<EOF #добавляем настройки в CMakeLists.txt
-
-if(BUILD_TESTS)
-	enable_testing()
-	file(GLOB \${PROJECT_NAME}_TEST_SOURCES tests/*.cpp)
-	add_executable(check \${\${PROJECT_NAME}_TEST_SOURCES})
-	target_link_libraries(check \${PROJECT_NAME} \${DEPENDS_LIBRARIES})
-	add_test(NAME check COMMAND check "-s" "-r" "compact" "--use-colour" "yes") 
-endif()
-EOF
-```
-Изменения в test1.cpp
-```ShellSession
-$ cat >> tests/test1.cpp <<EOF #вносим изменения в test1.cpp
-#include "catch.hpp"
-#include <print.hpp>
-
-TEST_CASE("output values should match input values", "[file]") {
-  std::string text = "hello";
-  std::ofstream out("file.txt");
-  
-  print(text, out);
-  out.close();
-  
-  std::string result;
-  std::ifstream in("file.txt");
-  in >> result;
-  
-  REQUIRE(result == text);
-}
-EOF
-```
-CMake
-```ShellSession
-$ cmake -H. -B_build -DBUILD_TESTS=ON #-H. устанавливаем каталог,-B_build указывает директорию для собираемых файлов,-D - заменяет команду set
-$ cmake --build _build  #--build _build создает бинарное дерево проекта
-$ cmake --build _build --target test #--target указывает необходимые для обработки цели
-```
-
-```ShellSession
-$ sed -i 's/lab05/lab07/g' README.md #вносим изменения в файле README.md
-$ sed -i 's/\(DCMAKE_INSTALL_PREFIX=_install\)/\1 -DBUILD_TESTS=ON/' .travis.yml #вносим изменения в файле .travis.yml
-$ sed -i '/cmake --build _build --target install/a\ #вносим изменения в файле .travis.yml
-- cmake --build _build --target test -- ARGS=--verbose
-' .travis.yml
-```
-Отображаем предупреждения или ошибки в файле .travis.yml
-```ShellSession
-$ travis lint
-```
-
-```ShellSession
-$ git add . #добавляем все отредактированные файлы в подтвержденные
-$ git commit -m"added tests" #создаем коммит
-$ git push origin master #выгружаем локальную репозиторий в удаленный репозиторий шестой лабораторной
-```
-
+Работа с Travis
 ```ShellSession
 $ travis login --auto #авторизуемся своим GITHUB аккаунтом
 $ travis enable #включаем репозиторий в Travis
 ```
+Создание базового файла документации, перемещение файлов, отправление изменений на удаленный репозиторий седьмой лабораторной работы 
 
 ```ShellSession
-$ mkdir artifacts #создаем каталог artifacts
-$ open https://github.com/${GITHUB_USERNAME}/lab07 #открываем репозиторий шестой лабораторной на GitHub
+$ doxygen docs/doxygen.conf
+$ ls | grep "[^docs]" | xargs rm -rf #перемещение и удаление файлов
+$ mv docs/html/* . && rm -rf docs
+$ git checkout -b gh-pages #перемещаемся на ветку gh-pages
+$ git add . #добавляем все отредактированные файлы в подтвержденные
+$ git commit -m"added documentation" #создаем коммит
+$ git push origin gh-pages #выгружаем локальный репозиторий в удаленный репозиторий
+$ git checkout master #перемещаемся на ветку master
 ```
 
 ## Report
 
 ```ShellSession
 $ popd
-$ export LAB_NUMBER=06
+$ export LAB_NUMBER=07
 $ git clone https://github.com/tp-labs/lab${LAB_NUMBER} tasks/lab${LAB_NUMBER}
 $ mkdir reports/lab${LAB_NUMBER}
 $ cp tasks/lab${LAB_NUMBER}/README.md reports/lab${LAB_NUMBER}/REPORT.md
@@ -123,8 +92,11 @@ $ gistup -m "lab${LAB_NUMBER}"
 
 ## Links
 
-- [Boost.Tests](http://www.boost.org/doc/libs/1_63_0/libs/test/doc/html/)
-- [Google Test](https://github.com/google/googletest)
+- [HTML](https://ru.wikipedia.org/wiki/HTML)
+- [LAΤΕΧ](https://ru.wikipedia.org/wiki/LaTeX)
+- [man](https://ru.wikipedia.org/wiki/Man_(%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4%D0%B0_Unix))
+- [CHM](https://ru.wikipedia.org/wiki/HTMLHelp)
+- [PostScript](https://ru.wikipedia.org/wiki/PostScript)
 
 ```
 Copyright (c) 2017 Братья Вершинины
